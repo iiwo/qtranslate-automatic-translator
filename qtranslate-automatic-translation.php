@@ -187,10 +187,14 @@ function qtransauto_bind_translate_all() {
             };
 			
     		callback = typeof callback !== 'undefined' ? callback : function(response) {
-                jQuery('#' + element_id).val(response);
+                element.val(response);
                 var splitted = qtrans_split(response);
                 jQuery.each(splitted, function(key, value) {
-                    jQuery('#' + element_id + "_" + key).val(value);
+					if (element_id !== undefined) {
+                  	    jQuery('#' + element_id + "_" + key).val(value);
+ 					} else {
+						element.parent().find('.qtrans_version.' + key).val(value);
+					}
                 });
     		};
 			
@@ -212,8 +216,8 @@ function qtransauto_bind_translate_all() {
         };
 	
         jQuery(document).ready(function($) {
-            jQuery('#qtransauto_translate_all').on('click', function() {
-				
+            jQuery('#qtransauto_translate_all').on('click', function(e) {
+
                 jQuery('#qtranslate_preloader_icon').show();
             	jQuery('#qtranslate_all_icon').hide();
 
@@ -230,6 +234,8 @@ function qtransauto_bind_translate_all() {
 				qtransauto_translate_element(jQuery("#title"));
 				
 				jQuery("#qtransauto_translate_all" ).trigger( "translation_started" );
+				
+				e.preventDefault();
             });
         });
     </script>
