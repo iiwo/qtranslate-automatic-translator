@@ -213,6 +213,9 @@ function qtransauto_bind_translate_all() {
 	
         jQuery(document).ready(function($) {
             jQuery('#qtransauto_translate_all').on('click', function() {
+				
+                jQuery('#qtranslate_preloader_icon').show();
+            	jQuery('#qtranslate_all_icon').hide();
 
                 qtransauto_translate_element(jQuery("#content"), function(response) {
                     jQuery("#content").attr("value", response);
