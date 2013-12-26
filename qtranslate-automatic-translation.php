@@ -164,16 +164,64 @@ add_action('media_buttons_context', 'qtransauto_add_translate_all_button');
 function qtransauto_bind_translate_all() {
     ?>
     <script type="text/javascript" >
+	    var QTRANSAUTO = {
+			increment_translations: function() {
+				this.translations_in_progress = this.translations_in_progress + 1;
+			},
+			decrement_translations: function() {
+				this.translations_in_progress = this.translations_in_progress - 1;
+				if (this.translations_in_progress < 0) {
+					this.translations_in_progress = 0;
+				}
+			},
+	    	translations_in_progress: 0
+	    };
+	
+    	function qtransauto_translate_element(element, callback) {
+			var element_id = element.attr('id');
+			
+            // translation parameters
+            var data = {
+                action: 'qtransauto_translate_ajax',
+                qtransauto_content: element.val()
+            };
+			
+    		callback = typeof callback !== 'undefined' ? callback : function(response) {
+                element.val(response);
+                var splitted = qtrans_split(response);
+                jQuery.each(splitted, function(key, value) {
+					if (element_id !== undefined) {
+                  	    jQuery('#' + element_id + "_" + key).val(value);
+ 					} else {
+						element.parent().find('.qtrans_version.' + key).val(value);
+					}
+                });
+    		};
+			
+			QTRANSAUTO.increment_translations();
+			jQuery.post(ajaxurl, data, function(response) {
+				callback(response);
+				QTRANSAUTO.decrement_translations();
+				if (QTRANSAUTO.translations_in_progress == 0) {
+	                jQuery('#qtranslate_preloader_icon').hide();
+	            	jQuery('#qtranslate_all_icon').show();
+			    }
+			});
+    	}
+
+        //translate titles
+        var data_title = {
+            action: 'qtransauto_translate_ajax',
+            qtransauto_content: jQuery("#title").attr("value")
+        };
+	
         jQuery(document).ready(function($) {
-            jQuery('#qtransauto_translate_all').on('click', function() {
+            jQuery('#qtransauto_translate_all').on('click', function(e) {
 
-                // translate contents
-                var data_content = {
-                    action: 'qtransauto_translate_ajax',
-                    qtransauto_content: jQuery("#content").attr("value")
-                };
+                jQuery('#qtranslate_preloader_icon').show();
+            	jQuery('#qtranslate_all_icon').hide();
 
-                $.post(ajaxurl, data_content, function(response) {
+                qtransauto_translate_element(jQuery("#content"), function(response) {
                     jQuery("#content").attr("value", response);
                     jQuery("#content").text(response);
                     var splitted = qtrans_split(response);
@@ -182,24 +230,12 @@ function qtransauto_bind_translate_all() {
                     jQuery("#qtrans_textarea_content").attr("value", value_for_selected);
                     tinyMCE.activeEditor.setContent(value_for_selected)
                 });
-
-                //translate titles
-                var data_title = {
-                    action: 'qtransauto_translate_ajax',
-                    qtransauto_content: jQuery("#title").attr("value")
-                };
-
-                $('#qtranslate_preloader_icon').show();
-                $('#qtranslate_all_icon').hide();
-                $.post(ajaxurl, data_title, function(response) {
-                    jQuery("#title").attr("value", response);
-                    var splitted = qtrans_split(response);
-                    jQuery.each(splitted, function(key, value) {
-                        jQuery("#qtrans_title_" + key).attr("value", value);
-                    });
-                    $('#qtranslate_preloader_icon').hide();
-                    $('#qtranslate_all_icon').show();
-                });
+				
+				qtransauto_translate_element(jQuery("#title"));
+				
+				jQuery("#qtransauto_translate_all" ).trigger( "translation_started" );
+				
+				e.preventDefault();
             });
         });
     </script>
